@@ -1,3 +1,104 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+pub mod birds;
+pub mod common;
+pub mod level;
+pub mod object;
+pub mod slingshot;
+pub mod ui;
+
+use avian2d::{PhysicsPlugins, math::Vector, prelude::Gravity};
+use bevy::{
+    DefaultPlugins,
+    app::{App, Startup, Update},
+    asset::AssetServer,
+    camera::ClearColor,
+    color::Color,
+    ecs::{
+        message::MessageWriter,
+        query::With,
+        system::{Query, Res},
+    },
+    prelude::{Camera2d, Commands, PluginGroup, default},
+    text::{TextColor, TextFont},
+    ui::{Node, PositionType, UiRect, Val, widget::Text},
+    window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme},
+};
+use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
+
+use crate::{
+    common::{LevelDespawnEvent, LevelSpawnEvent, SCALE, Score, SlingshotLaunchEvent},
+    level::{Levels, despawn_level, spawn_level},
+    object::Objects,
+    slingshot::slingshot_launch,
+    ui::ScoreText,
+};
+
 fn main() {
-    println!("Hello, world!");
+    App::new()
+        .add_plugins((
+            EmbeddedAssetPlugin {
+                mode: PluginMode::ReplaceDefault,
+            },
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    present_mode: PresentMode::AutoNoVsync,
+                    prevent_default_event_handling: true,
+                    resolution: WindowResolution::new(910, 540),
+                    title: "Strangry Birds".into(),
+                    window_theme: Some(WindowTheme::Dark),
+                    ..default()
+                }),
+                ..default()
+            }),
+            PhysicsPlugins::default(),
+        ))
+        .insert_resource(ClearColor(Color::hsv(0.0, 0.0, 0.2039)))
+        .insert_resource(Gravity(SCALE * Vector::NEG_Y))
+        .init_resource::<Score>()
+        .init_resource::<Objects>()
+        .init_resource::<Levels>()
+        .add_message::<LevelSpawnEvent>()
+        .add_message::<LevelDespawnEvent>()
+        .add_message::<SlingshotLaunchEvent>()
+        .add_systems(Startup, startup)
+        .add_systems(
+            Update,
+            (spawn_level, despawn_level, update_score, slingshot_launch),
+        )
+        .run();
+}
+
+fn startup(
+    mut writer: MessageWriter<LevelSpawnEvent>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    commands.spawn(Camera2d);
+
+    commands.spawn((
+        Node {
+            margin: UiRect::all(Val::Px(10.0)),
+            position_type: PositionType::Absolute,
+            right: Val::Px(0.0),
+            top: Val::Px(0.0),
+            ..default()
+        },
+        Text::new("Score"),
+        TextColor(Color::hsv(0.0, 0.0, 0.933)),
+        TextFont {
+            font: asset_server.load("ArchivoBlack-Regular.ttf"),
+            font_size: 28.0,
+            ..default()
+        },
+        ScoreText,
+    ));
+
+    writer.write(LevelSpawnEvent(0));
+}
+
+fn update_score(query: Query<&mut Text, With<ScoreText>>, score: Res<Score>) {
+    for mut text in query {
+        text.0 = score.0.to_string();
+    }
 }

@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 avian2d = "0.5.0"
 bevy = "0.18.0"
+bevy_embedded_assets = "0.15.0"
