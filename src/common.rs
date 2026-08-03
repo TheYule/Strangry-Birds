@@ -19,5 +19,4 @@ pub struct LevelDespawnEvent;
 #[derive(Message)]
 pub struct SlingshotLaunchEvent {
     pub slingshot: Entity,
-    pub bird: Entity
 }

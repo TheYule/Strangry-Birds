@@ -25,6 +25,7 @@ use bevy::{
     window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme},
 };
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
+use bevy_pannzoom::{PanNZoomCam, PanNZoomPlugin};
 
 use crate::{
     common::{LevelDespawnEvent, LevelSpawnEvent, SCALE, Score, SlingshotLaunchEvent},
@@ -52,6 +53,7 @@ fn main() {
                 ..default()
             }),
             PhysicsPlugins::default(),
+            PanNZoomPlugin::default(),
         ))
         .insert_resource(ClearColor(Color::hsv(0.0, 0.0, 0.2039)))
         .insert_resource(Gravity(SCALE * Vector::NEG_Y))
@@ -74,7 +76,18 @@ fn startup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn(Camera2d);
+    commands.spawn((
+        Camera2d,
+        PanNZoomCam {
+            min_scale: 1.0,
+            max_scale: 5.0,
+            min_x: -1000.0,
+            max_x: 10000.0,
+            min_y: -200.0,
+            max_y: 5000.0,
+            ..default()
+        },
+    ));
 
     commands.spawn((
         Node {

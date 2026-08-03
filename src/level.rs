@@ -14,7 +14,7 @@ use bevy::{
 };
 
 use crate::{
-    birds::Bird,
+    birds::{Bird, spawn_birds},
     common::{Despawn, Id, LevelDespawnEvent, LevelSpawnEvent, SCALE, Score},
     object::Objects,
     slingshot::spawn_slingshot,
@@ -92,7 +92,7 @@ impl Default for Levels {
 
 pub fn spawn_level(
     mut reader: MessageReader<LevelSpawnEvent>,
-    mut writer: MessageWriter<LevelDespawnEvent>,
+    // mut writer: MessageWriter<LevelDespawnEvent>,
     mut commands: Commands,
     levels: Res<Levels>,
     objects: Res<Objects>,
@@ -104,7 +104,14 @@ pub fn spawn_level(
         score.0 = 0;
 
         if let Some(level) = levels.get(event.0) {
-            spawn_slingshot(level.slingshot, commands.reborrow(), &asset_server);
+            let slingshot_transform =
+                spawn_slingshot(level.slingshot, commands.reborrow(), &asset_server);
+            spawn_birds(
+                &level.birds,
+                &slingshot_transform,
+                commands.reborrow(),
+                &asset_server,
+            );
 
             for (x, y, id) in &level.objects {
                 if let Some(object) = objects.get(*id) {
@@ -117,7 +124,11 @@ pub fn spawn_level(
                         },
                         object.rigid_body,
                         object.collider.clone(),
-                        Transform::from_xyz((*x - object.size.x / 2.0) * SCALE, (*y - object.size.y / 2.0) * SCALE, 0.0),
+                        Transform::from_xyz(
+                            (*x - object.size.x / 2.0) * SCALE,
+                            (*y - object.size.y / 2.0) * SCALE,
+                            0.0,
+                        ),
                     ));
                 }
             }

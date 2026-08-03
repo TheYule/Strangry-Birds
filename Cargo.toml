@@ -7,3 +7,21 @@ edition = "2024"
 avian2d = "0.5.0"
 bevy = "0.18.0"
 bevy_embedded_assets = "0.15.0"
+bevy_pannzoom = { path = "../Bevy Pan N Zoom" }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = 3
+panic = "abort"
+strip = "symbols"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
