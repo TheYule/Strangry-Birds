@@ -2,13 +2,12 @@ use std::ops::Sub;
 
 use avian2d::prelude::{Collider, LinearDamping, RigidBody};
 use bevy::{
-    asset::AssetServer,
-    ecs::{bundle::Bundle, entity::Entity, system::Commands},
-    math::{Vec2, Vec3},
+    ecs::{VariantDefaults, entity::Entity, system::Commands},
+    math::Vec3,
     prelude::Component,
+    scene::{CommandsSceneExt, Scene, bsn, template_value},
     sprite::Sprite,
     transform::components::Transform,
-    utils::default,
 };
 
 use crate::{
@@ -16,9 +15,10 @@ use crate::{
     slingshot::Slingshot,
 };
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Copy, Default, VariantDefaults)]
 #[require(Despawn)]
 pub enum Bird {
+    #[default]
     Strang,
     Michael,
     BloatedStrang,
@@ -41,51 +41,51 @@ impl Bird {
         }
     }
 
-    pub fn spawn_ghost(&self, asset_server: &AssetServer) -> impl Bundle {
-        (
-            self.clone(),
+    pub fn spawn_ghost(&self) -> impl Scene {
+        bsn! {
             Sprite {
-                image: asset_server.load(self.asset_path().to_string()),
-                custom_size: Some(Vec2::splat(self.size())),
-                ..default()
-            },
-        )
+                image: {self.asset_path().to_string()},
+            }
+            template_value(self.clone())
+        }
     }
 
-    pub fn spawn(&self, asset_server: &AssetServer) -> impl Bundle {
-        (
-            self.spawn_ghost(asset_server),
-            RigidBody::Dynamic,
-            Collider::circle(self.size() / 2.0),
-            LinearDamping(0.2),
-        )
+    fn collider(&self) -> Collider {
+        Collider::circle(self.size())
+    }
+
+    pub fn spawn(&self) -> impl Scene {
+        bsn! {
+            {self.spawn_ghost()}
+            template_value(RigidBody::Dynamic)
+            template_value(self.collider())
+            LinearDamping(0.2)
+        }
     }
 }
 
 #[derive(Component)]
 pub struct CurrentBird;
 
-#[derive(Component)]
+#[derive(Clone, Component, Copy, Debug, Default, Hash)]
 pub struct BirdOrder(pub usize);
 
 pub fn spawn_birds(
     birds: &Vec<Bird>,
     slingshot_transform: &Transform,
     mut commands: Commands,
-    asset_server: &AssetServer,
 ) -> Vec<Entity> {
     let mut entities = vec![];
     let mut i = 0;
 
     for bird in birds {
-        let mut b =
-            commands.spawn((
-                bird.spawn_ghost(asset_server),
-                BirdOrder(i),
-                Transform::from_translation(Slingshot::launch_pos(slingshot_transform).sub(
-                    Vec3::new((birds.len() - i) as f32 * SCALE, SCALE * 2.0, 0.0),
-                )),
-            ));
+        let mut b = commands.spawn_scene(bsn! {
+            {bird.spawn_ghost()}
+            BirdOrder(i)
+            template_value(Transform::from_translation(Slingshot::launch_pos(slingshot_transform).sub(
+                Vec3::new((birds.len() - i) as f32 * SCALE, SCALE * 2.0, 0.0),
+            )))
+        });
 
         if i == 0 {
             b.insert(CurrentBird);

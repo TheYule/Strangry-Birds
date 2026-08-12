@@ -4,7 +4,7 @@ pub const SCALE: f32 = 64.0;
 
 pub type Id = usize;
 
-#[derive(Default, Component)]
+#[derive(Clone, Component, Copy, Default)]
 pub struct Despawn;
 
 #[derive(Default, Resource)]
@@ -17,6 +17,4 @@ pub struct LevelSpawnEvent(pub Id);
 pub struct LevelDespawnEvent;
 
 #[derive(Message)]
-pub struct SlingshotLaunchEvent {
-    pub slingshot: Entity,
-}
+pub struct SlingshotLaunchEvent(pub Entity);

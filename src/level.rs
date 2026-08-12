@@ -2,7 +2,7 @@ use bevy::{
     asset::AssetServer,
     ecs::{
         entity::Entity,
-        message::{MessageReader, MessageWriter},
+        message::MessageReader,
         query::With,
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
@@ -104,14 +104,8 @@ pub fn spawn_level(
         score.0 = 0;
 
         if let Some(level) = levels.get(event.0) {
-            let slingshot_transform =
-                spawn_slingshot(level.slingshot, commands.reborrow(), &asset_server);
-            spawn_birds(
-                &level.birds,
-                &slingshot_transform,
-                commands.reborrow(),
-                &asset_server,
-            );
+            let slingshot_transform = spawn_slingshot(level.slingshot, commands.reborrow());
+            spawn_birds(&level.birds, &slingshot_transform, commands.reborrow());
 
             for (x, y, id) in &level.objects {
                 if let Some(object) = objects.get(*id) {

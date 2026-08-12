@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-avian2d = "0.5.0"
-bevy = "0.18.0"
-bevy_embedded_assets = "0.15.0"
-bevy_pannzoom = { path = "../Bevy Pan N Zoom" }
+avian2d = "0.7.0"
+bevy = "0.19.0"
+bevy_embedded_assets = "0.16.0"
+bevy_pannzoom = { path = "../Bevy Pan n Zoom" }
 
 [profile.dev]
 opt-level = 1
